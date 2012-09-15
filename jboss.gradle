@@ -1,0 +1,32 @@
+apply plugin: 'cargo'
+
+repositories {
+	mavenCentral();
+}
+
+task hello << {
+	println "Hello from jboss.gradle"
+}
+
+cargo {
+	containerId = "jboss42x"
+}
+
+dependencies {
+	def cargoVersion = '1.2.4'
+	cargo "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
+			"org.codehaus.cargo:cargo-ant:$cargoVersion"
+}
+
+buildscript {
+	repositories {
+		add(new org.apache.ivy.plugins.resolver.URLResolver()) {
+			name = 'GitHub'
+				   addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
+		}
+	}
+
+	dependencies {
+		classpath 'bmuschko:gradle-cargo-plugin:0.5.5';
+	}
+}

@@ -1,0 +1,10 @@
+#ignore eclipse project files
+.classpath
+.project
+.settings
+bin
+
+#ignore gradle files and build tmp files
+.gradle
+build
+

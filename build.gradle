@@ -1,0 +1,86 @@
+apply plugin: 'java'
+apply plugin: 'js'
+apply plugin: 'war'
+apply plugin: 'tomcat'
+
+apply plugin: 'eclipse'
+
+
+//
+// Process javascript files
+//
+def javascriptSource = "${projectDir}/src/main/javascript"
+def javascriptDest = "${buildDir}/js"
+
+task processJavascript(dependsOn: 'minifyJs') {
+	inputs.dir '${javascriptSource}'
+	outputs.dir '${javascriptDest}'
+}
+
+jshint.configure {
+	source = fileTree(dir: javascriptSource, include: "**/*.js")
+	dest = file("${javascriptDest}/jshint.out")
+}
+
+combineJs.configure {
+	source = fileTree(dir: javascriptSource, include: "**/*.js")
+	dest = file("${javascriptDest}/all.js")
+}.dependsOn("jshint")
+
+minifyJs.configure {
+	source = file("${javascriptDest}/all.js")
+	dest = file("${javascriptDest}/all-min.js")
+}.dependsOn("combineJs")
+
+
+//
+// War creation to pull in js (after processing)
+//
+war.configure {
+	from (javascriptDest) {
+		into 'js' include '**/*.js'
+	}
+}.dependsOn("processJavascript")
+
+
+//
+// Deployment tasks
+//
+task jbossInstall(type: GradleBuild) {
+	buildFile = 'jboss.gradle'
+	tasks = ['hello']
+}
+
+
+//
+// Project dependencies
+//
+repositories {
+	mavenCentral();
+}
+
+dependencies {
+	testCompile group: 'junit', name: 'junit', version: '4+'
+	def tomcatVersion = '6.0.35'
+	tomcat "org.apache.tomcat:catalina:${tomcatVersion}",
+			"org.apache.tomcat:coyote:${tomcatVersion}",
+			"org.apache.tomcat:jasper:${tomcatVersion}"
+}
+
+
+//
+// Gradle plugin dependencies
+//
+buildscript {
+    repositories {
+        mavenCentral()
+		add(new org.apache.ivy.plugins.resolver.URLResolver()) {
+			name = 'GitHub'
+				   addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
+		}
+    }
+    dependencies {
+        classpath 'com.eriwen:gradle-js-plugin:1.1'
+		classpath 'bmuschko:gradle-tomcat-plugin:0.9.4';
+    }
+}
