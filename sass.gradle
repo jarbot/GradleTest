@@ -1,0 +1,56 @@
+import javax.script.ScriptEngineManager
+
+task compileSass {
+
+    ext.inputDir = project.file('src/main/sass')
+    ext.outputDir = new File(project.buildDir, 'sass')
+    ext.cacheLocation = new File(project.buildDir, 'sass-cache')
+
+    doLast {
+
+        def driverScript = '''
+            require 'rubygems'
+            require 'sass'
+
+            $mappings.each do |src, dst|
+                engine = Sass::Engine.for_file(src, {:cache_location => $cacheLocation})
+                css = engine.render
+                File.open(dst, 'w') {|f| f.write(css) }
+                puts "#{src} -> #{dst}"
+            end
+        '''
+
+        def mappings = new TreeMap()
+
+        inputDir.traverse(preDir: {if (it.isHidden()) return FileVisitResult.SKIP_SUBTREE}) { inputFile ->
+            if (inputFile.isFile() && (inputFile.name.endsWith('.sass') || inputFile.name.endsWith('.scss'))) {
+                def outputFile = new File(outputDir, relativePath(inputDir, inputFile) + '.css')
+                outputFile.parentFile.mkdirs()
+                mappings.put(inputFile.path, outputFile.path)
+            }
+        }
+
+        def engine = new ScriptEngineManager().getEngineByName("jruby")
+        engine.put("cacheLocation", cacheLocation.path)
+        engine.put("mappings", mappings)
+        engine.eval(driverScript)
+    }
+}
+
+String relativePath(File root, File descendant) {
+    def rootPath = root.absolutePath
+    def descendantPath = descendant.absolutePath
+    assert descendantPath.startsWith(rootPath)
+    return descendantPath.substring(rootPath.length() + 1)
+}
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'org.jruby', name: 'jruby-complete', version: '1.6.7.2'
+        classpath group: 'me.n4u.sass', name: 'sass-gems', version: '3.1.16'
+    }
+}
