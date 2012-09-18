@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'js'
 apply plugin: 'tomcat'
+apply from:   'sass.gradle'
 
 apply plugin: 'eclipse'
 
@@ -12,34 +13,42 @@ def javascriptSource = "${projectDir}/src/main/javascript"
 def javascriptDest = "${buildDir}/js"
 
 task processJavascript(dependsOn: 'minifyJs') {
-	inputs.dir '${javascriptSource}'
-	outputs.dir '${javascriptDest}'
+    inputs.dir '${javascriptSource}'
+    outputs.dir '${javascriptDest}'
 }
 
 jshint.configure {
-	source = fileTree(dir: javascriptSource, include: "**/*.js")
-	dest = file("${javascriptDest}/jshint.out")
+    source = fileTree(dir: javascriptSource, include: "**/*.js")
+    dest = file("${javascriptDest}/jshint.out")
 }
 
 combineJs.configure {
-	source = fileTree(dir: javascriptSource, include: "**/*.js")
-	dest = file("${javascriptDest}/all.js")
+    source = fileTree(dir: javascriptSource, include: "**/*.js")
+    dest = file("${javascriptDest}/all.js")
 }.dependsOn("jshint")
 
 minifyJs.configure {
-	source = file("${javascriptDest}/all.js")
-	dest = file("${javascriptDest}/all-min.js")
+    source = file("${javascriptDest}/all.js")
+    dest = file("${javascriptDest}/all-min.js")
 }.dependsOn("combineJs")
 
+// Process css files
+compileSass.configure {
+    inputDir = project.file('src/main/scss')
+    outputDir = new File(project.buildDir, 'css')
+}
 
 //
 // War creation to pull in js (after processing)
 //
 war.configure {
-	from (javascriptDest) {
-		into 'js' include '**/*.js'
-	}
-}.dependsOn("processJavascript")
+    from (javascriptDest) {
+        into 'js' include '**/*.js'
+    }
+    from (compileSass.outputDir) {
+        into 'css' include '**/*.css'
+    }
+}.dependsOn("processJavascript","compileSass")
 
 
 //
@@ -48,20 +57,20 @@ war.configure {
 def jbossVersion = '4.2.3.GA'
 def jbossDistDir = "${buildDir}/jboss"
 configurations {
-	jboss
+    jboss
 }
 dependencies {
 	jboss "org.jboss.jbossas:jboss-as-dist:${jbossVersion}"
 }
 task jbossInstall(type: Copy) {
-	configurations.jboss.findAll {
-		println it.absolutePath
-		from zipTree(it) 
-		into "${jbossDistDir}"
-	}
+    configurations.jboss.findAll {
+        println it.absolutePath
+        from zipTree(it)
+        into "${jbossDistDir}"
+    }
 }
 task jbossStart (dependsOn: jbossInstall) << {
-	println "starting ${jbossDistDir}/jboss-${jbossVersion}"
+    println "starting ${jbossDistDir}/jboss-${jbossVersion}"
 }
 
 
@@ -69,15 +78,16 @@ task jbossStart (dependsOn: jbossInstall) << {
 // Project dependencies
 //
 repositories {
-	mavenCentral();
+    mavenLocal();
+    mavenCentral();
 }
 
 dependencies {
-	testCompile group: 'junit', name: 'junit', version: '4+'
-	def tomcatVersion = '6.0.35'
-	tomcat "org.apache.tomcat:catalina:${tomcatVersion}",
-			"org.apache.tomcat:coyote:${tomcatVersion}",
-			"org.apache.tomcat:jasper:${tomcatVersion}"
+    testCompile group: 'junit', name: 'junit', version: '4+'
+    def tomcatVersion = '6.0.35'
+    tomcat "org.apache.tomcat:catalina:${tomcatVersion}",
+            "org.apache.tomcat:coyote:${tomcatVersion}",
+            "org.apache.tomcat:jasper:${tomcatVersion}"
 }
 
 
@@ -87,13 +97,13 @@ dependencies {
 buildscript {
     repositories {
         mavenCentral()
-		add(new org.apache.ivy.plugins.resolver.URLResolver()) {
-			name = 'GitHub'
-				   addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
-		}
+        add(new org.apache.ivy.plugins.resolver.URLResolver()) {
+            name = 'GitHub'
+            addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
+        }
     }
     dependencies {
         classpath 'com.eriwen:gradle-js-plugin:1.1'
-		classpath 'bmuschko:gradle-tomcat-plugin:0.9.4';
+        classpath 'bmuschko:gradle-tomcat-plugin:0.9.4';
     }
 }
