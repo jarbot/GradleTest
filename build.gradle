@@ -1,6 +1,5 @@
 apply plugin: 'java'
 apply plugin: 'js'
-apply plugin: 'war'
 apply plugin: 'tomcat'
 
 apply plugin: 'eclipse'
@@ -44,11 +43,25 @@ war.configure {
 
 
 //
-// Deployment tasks
+// JBoss Deployment tasks and configuration
 //
-task jbossInstall(type: GradleBuild) {
-	buildFile = 'jboss.gradle'
-	tasks = ['hello']
+def jbossVersion = '4.2.3.GA'
+def jbossDistDir = "${buildDir}/jboss"
+configurations {
+	jboss
+}
+dependencies {
+	jboss "org.jboss.jbossas:jboss-as-dist:${jbossVersion}"
+}
+task jbossInstall(type: Copy) {
+	configurations.jboss.findAll {
+		println it.absolutePath
+		from zipTree(it) 
+		into "${jbossDistDir}"
+	}
+}
+task jbossStart (dependsOn: jbossInstall) << {
+	println "starting ${jbossDistDir}/jboss-${jbossVersion}"
 }
 
 

@@ -16,6 +16,7 @@ dependencies {
 	def cargoVersion = '1.2.4'
 	cargo "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
 			"org.codehaus.cargo:cargo-ant:$cargoVersion"
+	runtime 'org.jboss.jbossas:jboss-as-dist:4.2.3.GA'
 }
 
 buildscript {
