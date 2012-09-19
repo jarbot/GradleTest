@@ -57,20 +57,31 @@ war.configure {
 def jbossVersion = '4.2.3.GA'
 def jbossDistDir = "${buildDir}/jboss"
 configurations {
-    jboss
+	jboss
 }
 dependencies {
 	jboss "org.jboss.jbossas:jboss-as-dist:${jbossVersion}"
 }
 task jbossInstall(type: Copy) {
-    configurations.jboss.findAll {
-        println it.absolutePath
-        from zipTree(it)
-        into "${jbossDistDir}"
-    }
+	configurations.jboss.findAll {
+		from zipTree(it) 
+		into "${jbossDistDir}"
+		doFirst {
+			println "Expanding jboss distribution into ${jbossDistDir}"
+		}
+	}
 }
-task jbossStart (dependsOn: jbossInstall) << {
-    println "starting ${jbossDistDir}/jboss-${jbossVersion}"
+task jbossStart (type: Exec, dependsOn: jbossInstall) {
+	def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run.bat"
+	println "Starting ${jbossRunFile}"
+	def os = System.getProperty("os.name").toLowerCase() 
+	if (os.contains("windows")) {
+		// start a seperate process in windowsa
+		commandLine 'cmd', '/c', "start ${jbossRunFile}"
+	} else { 
+		// Not windows (assume linux variant)
+		println "Not supported in Linux yet"
+	} 
 }
 
 
