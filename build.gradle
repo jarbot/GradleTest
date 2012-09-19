@@ -32,11 +32,17 @@ minifyJs.configure {
     dest = file("${javascriptDest}/all-min.js")
 }.dependsOn("combineJs")
 
+def sassSource = "${projectDir}/src/main/scss"
+def cssDest = "${project.buildDir}/css"
+
 // Process css files
 compileSass.configure {
-    inputDir = project.file('src/main/scss')
-    outputDir = new File(project.buildDir, 'css')
+    inputs.dir "${sassSource}"
+    outputs.dir "${cssDest}"
+    inputDir = project.file("${sassSource}")
+    outputDir = new File("${cssDest}")
 }
+
 
 //
 // War creation to pull in js (after processing)
@@ -73,7 +79,6 @@ task jbossInstall(type: Copy) {
 }
 task jbossStart (type: Exec, dependsOn: jbossInstall) {
 	def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run.bat"
-	println "Starting ${jbossRunFile}"
 	def os = System.getProperty("os.name").toLowerCase() 
 	if (os.contains("windows")) {
 		// start a seperate process in windowsa
@@ -82,6 +87,9 @@ task jbossStart (type: Exec, dependsOn: jbossInstall) {
 		// Not windows (assume linux variant)
 		println "Not supported in Linux yet"
 	} 
+	doFirst {
+		println "Starting ${jbossRunFile}"
+	}
 }
 
 
