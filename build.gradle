@@ -4,7 +4,7 @@ apply plugin: 'tomcat'
 apply plugin: 'war'
 apply plugin: 'eclipse'
 
-apply from:   'sass.gradle'
+apply from: 'sass.gradle'
 
 
 //
@@ -14,23 +14,23 @@ def javascriptSource = "${projectDir}/src/main/javascript"
 def javascriptDest = "${buildDir}/js"
 
 task processJavascript(dependsOn: 'minifyJs') {
-    inputs.dir '${javascriptSource}'
-    outputs.dir '${javascriptDest}'
+	inputs.dir '${javascriptSource}'
+	outputs.dir '${javascriptDest}'
 }
 
 jshint.configure {
-    source = fileTree(dir: javascriptSource, include: "**/*.js")
-    dest = file("${javascriptDest}/jshint.out")
+	source = fileTree(dir: javascriptSource, include: "**/*.js")
+	dest = file("${javascriptDest}/jshint.out")
 }
 
 combineJs.configure {
-    source = fileTree(dir: javascriptSource, include: "**/*.js")
-    dest = file("${javascriptDest}/all.js")
+	source = fileTree(dir: javascriptSource, include: "**/*.js")
+	dest = file("${javascriptDest}/all.js")
 }.dependsOn("jshint")
 
 minifyJs.configure {
-    source = file("${javascriptDest}/all.js")
-    dest = file("${javascriptDest}/all-min.js")
+	source = file("${javascriptDest}/all.js")
+	dest = file("${javascriptDest}/all-min.js")
 }.dependsOn("combineJs")
 
 def sassSource = "${projectDir}/src/main/scss"
@@ -38,10 +38,10 @@ def cssDest = "${project.buildDir}/css"
 
 // Process css files
 compileSass.configure {
-    inputs.dir "${sassSource}"
-    outputs.dir "${cssDest}"
-    inputDir = project.file("${sassSource}")
-    outputDir = new File("${cssDest}")
+	inputs.dir "${sassSource}"
+	outputs.dir "${cssDest}"
+	inputDir = project.file("${sassSource}")
+	outputDir = new File("${cssDest}")
 }
 
 
@@ -49,12 +49,12 @@ compileSass.configure {
 // War creation to pull in js and css (after processing)
 //
 war.configure {
-    from (javascriptDest) {
-        into 'js' include '**/*.js'
-    }
-    from (compileSass.outputDir) {
-        into 'css' include '**/*.css'
-    }
+	from (javascriptDest) {
+		into 'js' include '**/*.js'
+	}
+	from (compileSass.outputDir) {
+		into 'css' include '**/*.css'
+	}
 }.dependsOn("processJavascript", "compileSass")
 
 
@@ -68,6 +68,7 @@ configurations {
 	jbossdeploy
 }
 dependencies {
+	def cargoVersion = '1.2.4'
 	jboss "org.jboss.jbossas:jboss-as-dist:${jbossVersion}"
 	jbossdeploy "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
 		"org.codehaus.cargo:cargo-ant:$cargoVersion"
@@ -121,8 +122,8 @@ task jbossDeploy(dependsOn: war) << {
 // Project dependencies
 //
 repositories {
-    mavenLocal();
-    mavenCentral();
+	mavenLocal();
+	mavenCentral();
 }
 
 dependencies {
@@ -131,7 +132,6 @@ dependencies {
 	tomcat "org.apache.tomcat:catalina:${tomcatVersion}",
 		"org.apache.tomcat:coyote:${tomcatVersion}",
 		"org.apache.tomcat:jasper:${tomcatVersion}"
-	def cargoVersion = '1.2.4'
 }
 
 
@@ -139,15 +139,15 @@ dependencies {
 // Gradle plugin dependencies
 //
 buildscript {
-    repositories {
-        mavenCentral()
-        add(new org.apache.ivy.plugins.resolver.URLResolver()) {
-            name = 'GitHub'
-            addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
-        }
-    }
-    dependencies {
-        classpath 'com.eriwen:gradle-js-plugin:1.1'
-        classpath 'bmuschko:gradle-tomcat-plugin:0.9.4';
-    }
+	repositories {
+		mavenCentral()
+		add(new org.apache.ivy.plugins.resolver.URLResolver()) {
+			name = 'GitHub'
+			addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
+		}
+	}
+	dependencies {
+		classpath 'com.eriwen:gradle-js-plugin:1.1'
+		classpath 'bmuschko:gradle-tomcat-plugin:0.9.4';
+	}
 }
