@@ -11,5 +11,5 @@ startup of a tomcat container.
 In progress:
 
 - Deployment to JBOSS
-- test
+- Adding Compass to SASS (maybe)
 
