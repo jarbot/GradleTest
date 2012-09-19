@@ -45,7 +45,7 @@ compileSass.configure {
 
 
 //
-// War creation to pull in js (after processing)
+// War creation to pull in js and css (after processing)
 //
 war.configure {
     from (javascriptDest) {
@@ -77,18 +77,21 @@ task jbossInstall(type: Copy) {
 		}
 	}
 }
-task jbossStart (type: Exec, dependsOn: jbossInstall) {
-	def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run.bat"
-	def os = System.getProperty("os.name").toLowerCase() 
-	if (os.contains("windows")) {
-		// start a seperate process in windowsa
-		commandLine 'cmd', '/c', "start ${jbossRunFile}"
-	} else { 
-		// Not windows (assume linux variant)
-		println "Not supported in Linux yet"
-	} 
+task jbossStart (dependsOn: jbossInstall) {
 	doFirst {
+		def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run.bat"
 		println "Starting ${jbossRunFile}"
+		def os = System.getProperty("os.name").toLowerCase() 
+		if (os.contains("windows")) {
+			// start a seperate process in windows
+			ant.exec(executable: 'cmd') {
+				arg(value: '/c')
+				arg(value: "start ${jbossRunFile}")
+			}
+		} else { 
+			// Not windows (assume linux variant)
+			println "Not supported in Linux yet"
+		} 
 	}
 }
 
