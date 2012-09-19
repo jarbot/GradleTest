@@ -1,9 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'js'
 apply plugin: 'tomcat'
-apply from:   'sass.gradle'
-
+apply plugin: 'war'
 apply plugin: 'eclipse'
+
+apply from:   'sass.gradle'
 
 
 //
@@ -54,7 +55,7 @@ war.configure {
     from (compileSass.outputDir) {
         into 'css' include '**/*.css'
     }
-}.dependsOn("processJavascript","compileSass")
+}.dependsOn("processJavascript", "compileSass")
 
 
 //
@@ -64,9 +65,12 @@ def jbossVersion = '4.2.3.GA'
 def jbossDistDir = "${buildDir}/jboss"
 configurations {
 	jboss
+	jbossdeploy
 }
 dependencies {
 	jboss "org.jboss.jbossas:jboss-as-dist:${jbossVersion}"
+	jbossdeploy "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
+		"org.codehaus.cargo:cargo-ant:$cargoVersion"
 }
 task jbossInstall(type: Copy) {
 	configurations.jboss.findAll {
@@ -79,19 +83,36 @@ task jbossInstall(type: Copy) {
 }
 task jbossStart (dependsOn: jbossInstall) {
 	doFirst {
-		def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run.bat"
+		def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run"
 		println "Starting ${jbossRunFile}"
 		def os = System.getProperty("os.name").toLowerCase() 
 		if (os.contains("windows")) {
 			// start a seperate process in windows
-			ant.exec(executable: 'cmd') {
+			ant.exec(executable: 'cmd', spawn: 'true') {
 				arg(value: '/c')
-				arg(value: "start ${jbossRunFile}")
+				arg(value: "start ${jbossRunFile}.bat")
 			}
 		} else { 
 			// Not windows (assume linux variant)
 			println "Not supported in Linux yet"
 		} 
+	}
+}
+task jbossDeploy(dependsOn: war) << {
+	ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader 
+	configurations.jbossdeploy.each { File f -> 
+		antClassLoader.addURL(f.toURI().toURL()) 
+	} 
+
+	ant.taskdef(resource: 'cargo.tasks')
+	ant.cargo(containerId: 'jboss42x', type: 'remote', action: 'redeploy') {
+		configuration(type: 'runtime') {
+			property(name: 'cargo.hostname', value: 'localhost')
+			property(name: 'cargo.servlet.port', value: '8080')
+			ant.deployable(type: 'war', file: "${buildDir}/libs/GradleTest.war") {
+				property(name: 'context', value: 'test')
+			}
+		}
 	}
 }
 
@@ -105,11 +126,12 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4+'
-    def tomcatVersion = '6.0.35'
-    tomcat "org.apache.tomcat:catalina:${tomcatVersion}",
-            "org.apache.tomcat:coyote:${tomcatVersion}",
-            "org.apache.tomcat:jasper:${tomcatVersion}"
+	testCompile 'junit:junit:4+'
+	def tomcatVersion = '6.0.35'
+	tomcat "org.apache.tomcat:catalina:${tomcatVersion}",
+		"org.apache.tomcat:coyote:${tomcatVersion}",
+		"org.apache.tomcat:jasper:${tomcatVersion}"
+	def cargoVersion = '1.2.4'
 }
 
 
