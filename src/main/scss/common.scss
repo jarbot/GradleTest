@@ -1,3 +1,18 @@
-h1 {
-  color: red;
+@import "mixins/button.scss";
+@import "constants/colors.scss";
+
+body {
+  background-color: $secondary-color;
 }
+
+h1 {
+  color: $primary-color;
+}
+input[type="submit"] {
+  @include button($button-default-top-color, $button-default-bottom-color,"large");
+}
+input[type="submit"]:hover {
+  @include button_hover($button-default-hover-top-color,$button-default-hover-bottom-color);
+}
+
+@include generate_domain_classes(aas ahs abs, testMixinWithinMixin, 40px);

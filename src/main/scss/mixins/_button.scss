@@ -1,0 +1,76 @@
+/**
+ * Returns styles for site themed buttons
+ *
+ * @param: color the color of the button background
+ * @param: size the size of the button, valid values = small, medium, large (default: medium)
+ */
+
+
+@mixin button($topColor, $bottomColor, $size) {
+  @if $size == 'small' {
+    padding: 5px;
+    font-size: 12px;
+  } @else if $size == 'large' {
+    padding: 20px;
+    font-size: 20px;
+  } @else { // defautl & size == medium
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  border: 1px solid #ffffff;
+  overflow: visible;
+  text-transform: uppercase;
+  -moz-box-shadow:
+    1px 2px 4px rgba(000,000,000,0.5),
+    inset 0px 0px 1px rgba(255,255,255,0.7);
+  -webkit-box-shadow:
+    1px 2px 4px rgba(000,000,000,0.5),
+    inset 0px 0px 1px rgba(255,255,255,0.7);
+  box-shadow:
+    1px 2px 4px rgba(000,000,000,0.5),
+    inset 0px 0px 1px rgba(255,255,255,0.7);
+  color: #ffffff;
+  background: $bottomColor; /* Old browsers */
+  background: -moz-linear-gradient(top,  $topColor 0%, $topColor 49%, $bottomColor 50%, $bottomColor 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,$topColor), color-stop(49%,$topColor), color-stop(50%,$bottomColor), color-stop(100%,$bottomColor)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* IE10+ */
+  background: linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='$topColor', endColorstr='$bottomColor',GradientType=0 ); /* IE6-9 */
+
+}
+
+/**
+ * Returns styles for site themed buttons
+ *
+ * @param: topColor the origin color of the gradient background
+ * @param: bottomColor the bottom color of the gradient background
+ */
+
+@mixin button_hover($topColor, $bottomColor) {
+  cursor: pointer;
+  background: $bottomColor; /* Old browsers f47b20 e46608 */
+  background: -moz-linear-gradient(top,  $topColor 0%, $topColor 49%, $bottomColor 50%, $bottomColor 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,$topColor), color-stop(49%,$topColor), color-stop(50%,$bottomColor), color-stop(100%,$bottomColor)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* IE10+ */
+  background: linear-gradient(top,  $topColor 0%,$topColor 49%,$bottomColor 50%,$bottomColor 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='$topColor', endColorstr='$bottomColor',GradientType=0 ); /* IE6-9 */
+}
+
+@mixin testMixinWithinMixin($valueTest) {
+  padding: $valueTest;
+  color: green;
+}
+
+@mixin generate_domain_classes($domain_list, $mixin, $mixinArgs...) {
+  $domain_list: unquote($domain_list);
+  @each $domain in $domain_list {
+    .#{$domain} h2 {
+      @include testMixinWithinMixin($mixinArgs);
+    }
+  }
+}

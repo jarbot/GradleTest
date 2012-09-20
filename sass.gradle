@@ -12,6 +12,23 @@ task compileSass {
             require 'rubygems'
             require 'sass'
 
+            Sass::Engine::DEFAULT_OPTIONS[:load_paths].tap do |load_paths|
+                load_paths << $srcDir.path
+            end
+
+            Sass::Engine::DEFAULT_OPTIONS[:style].tap do |style|
+                style = :compressed
+            end
+
+            #Sass::Engine::DEFAULT_OPTIONS[:style] = :compressed
+
+            #module Sass::Script::Functions
+            #    def getDomain(string)
+            #        Sass::Script::String.new("aas");
+            #    end
+            #    declare :getDomain, :args => [:string]
+            #end
+
             $mappings.each do |src, dst|
                 engine = Sass::Engine.for_file(src, {:cache_location => $cacheLocation})
                 css = engine.render
@@ -33,6 +50,7 @@ task compileSass {
         def engine = new ScriptEngineManager().getEngineByName("jruby")
         engine.put("cacheLocation", cacheLocation.path)
         engine.put("mappings", mappings)
+        engine.put("srcDir",inputDir)
         engine.eval(driverScript)
     }
 }
@@ -51,6 +69,6 @@ buildscript {
     }
     dependencies {
         classpath group: 'org.jruby', name: 'jruby-complete', version: '1.6.7.2'
-        classpath group: 'me.n4u.sass', name: 'sass-gems', version: '3.1.16'
+        classpath group: 'me.n4u.sass', name: 'sass-gems', version: '3.2.1'
     }
 }
