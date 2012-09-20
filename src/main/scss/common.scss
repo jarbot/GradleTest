@@ -8,6 +8,8 @@ body {
 h1 {
   color: $primary-color;
 }
+
+// test mixin with asd buttons
 input[type="submit"] {
   @include button($button-default-top-color, $button-default-bottom-color,"large");
 }
@@ -15,4 +17,7 @@ input[type="submit"]:hover {
   @include button_hover($button-default-hover-top-color,$button-default-hover-bottom-color);
 }
 
+// test generating styles with dynamic class names (domain name example)
+// test passing mixin as an argument
+// test passing variable arugment lengths to nested mixin
 @include generate_domain_classes(aas ahs abs, testMixinWithinMixin, 40px);

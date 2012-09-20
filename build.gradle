@@ -34,6 +34,7 @@ minifyJs.configure {
 
 def sassSource = "${projectDir}/src/main/scss"
 def cssDest = "${project.buildDir}/css"
+def outputCssStyle = "compressed"  // this should probably be set to 'expanded' or 'nested' for dev envs
 
 // Process css files
 compileSass.configure {
@@ -41,6 +42,7 @@ compileSass.configure {
     outputs.dir "${cssDest}"
     inputDir = project.file("${sassSource}")
     outputDir = new File("${cssDest}")
+    outputStyle = "${outputCssStyle}"
 }
 
 

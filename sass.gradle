@@ -6,6 +6,10 @@ task compileSass {
     ext.outputDir = new File(project.buildDir, 'sass')
     ext.cacheLocation = new File(project.buildDir, 'sass-cache')
 
+    // see http://sass-lang.com/docs/yardoc/file.SASS_REFERENCE.html#output_style for options
+    ext.outputStyle = "expanded"
+
+
     doLast {
 
         def driverScript = '''
@@ -16,12 +20,6 @@ task compileSass {
                 load_paths << $srcDir.path
             end
 
-            Sass::Engine::DEFAULT_OPTIONS[:style].tap do |style|
-                style = :compressed
-            end
-
-            #Sass::Engine::DEFAULT_OPTIONS[:style] = :compressed
-
             #module Sass::Script::Functions
             #    def getDomain(string)
             #        Sass::Script::String.new("aas");
@@ -30,10 +28,23 @@ task compileSass {
             #end
 
             $mappings.each do |src, dst|
-                engine = Sass::Engine.for_file(src, {:cache_location => $cacheLocation})
+
+                if $outputStyle == "compressed"
+                    puts "using compressed stylesheets"
+                    engine = Sass::Engine.for_file(src, {:cache_location => $cacheLocation, :style => :compressed})
+                elsif $outputStyle == "expanded"
+                    puts "using expanded stylesheets"
+                    engine = Sass::Engine.for_file(src, {:cache_location => $cacheLocation, :style => :expanded})
+                else
+                    puts "using nested stylesheets"
+                    engine = Sass::Engine.for_file(src, {:cache_location => $cacheLocation, :style => :nested})
+                end
+
+                #engine = Sass::Engine.for_file(src, {:cache_location => $cacheLocation, :style => style})
                 css = engine.render
                 File.open(dst, 'w') {|f| f.write(css) }
                 puts "#{src} -> #{dst}"
+
             end
         '''
 
@@ -51,6 +62,7 @@ task compileSass {
         engine.put("cacheLocation", cacheLocation.path)
         engine.put("mappings", mappings)
         engine.put("srcDir",inputDir)
+        engine.put("outputStyle",outputStyle)
         engine.eval(driverScript)
     }
 }
