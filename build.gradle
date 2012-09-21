@@ -1,10 +1,11 @@
 apply plugin: 'java'
 apply plugin: 'js'
 apply plugin: 'tomcat'
-apply from:   'sass.gradle'
-
+apply plugin: 'war'
 apply plugin: 'eclipse'
 
+
+apply from: 'sass.gradle'
 
 //
 // Process javascript files
@@ -66,9 +67,13 @@ def jbossVersion = '4.2.3.GA'
 def jbossDistDir = "${buildDir}/jboss"
 configurations {
 	jboss
+	jbossdeploy
 }
 dependencies {
+	def cargoVersion = '1.2.4'
 	jboss "org.jboss.jbossas:jboss-as-dist:${jbossVersion}"
+	jbossdeploy "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
+		"org.codehaus.cargo:cargo-ant:$cargoVersion"
 }
 task jbossInstall(type: Copy) {
 	configurations.jboss.findAll {
@@ -79,18 +84,38 @@ task jbossInstall(type: Copy) {
 		}
 	}
 }
-task jbossStart (type: Exec, dependsOn: jbossInstall) {
-	def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run.bat"
-	def os = System.getProperty("os.name").toLowerCase() 
-	if (os.contains("windows")) {
-		// start a seperate process in windowsa
-		commandLine 'cmd', '/c', "start ${jbossRunFile}"
-	} else { 
-		// Not windows (assume linux variant)
-		println "Not supported in Linux yet"
-	} 
+task jbossStart (dependsOn: jbossInstall) {
 	doFirst {
+		def jbossRunFile = "${jbossDistDir}/jboss-${jbossVersion}/bin/run"
 		println "Starting ${jbossRunFile}"
+		def os = System.getProperty("os.name").toLowerCase() 
+		if (os.contains("windows")) {
+			// start a seperate process in windows
+			ant.exec(executable: 'cmd', spawn: 'true') {
+				arg(value: '/c')
+				arg(value: "start ${jbossRunFile}.bat")
+			}
+		} else { 
+			// Not windows (assume linux variant)
+			println "Not supported in Linux yet"
+		} 
+	}
+}
+task jbossDeploy(dependsOn: war) << {
+	ClassLoader antClassLoader = org.apache.tools.ant.Project.class.classLoader 
+	configurations.jbossdeploy.each { File f -> 
+		antClassLoader.addURL(f.toURI().toURL()) 
+	} 
+
+	ant.taskdef(resource: 'cargo.tasks')
+	ant.cargo(containerId: 'jboss42x', type: 'remote', action: 'redeploy') {
+		configuration(type: 'runtime') {
+			property(name: 'cargo.hostname', value: 'localhost')
+			property(name: 'cargo.servlet.port', value: '8080')
+			ant.deployable(type: 'war', file: "${buildDir}/libs/GradleTest.war") {
+				property(name: 'context', value: 'test')
+			}
+		}
 	}
 }
 
